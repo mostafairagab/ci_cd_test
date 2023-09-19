@@ -1,0 +1,46 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches:
+      - main  # Change this to your main branch name
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.gradle/caches
+        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-${{ runner.os }}-
+
+    - name: Cache Android SDK
+      uses: actions/cache@v2
+      with:
+        path: ~/.android/build-cache
+        key: android-sdk-${{ runner.os }}-${{ hashFiles('**/*.xml') }}
+        restore-keys: |
+          android-sdk-${{ runner.os }}-
+
+    - name: Build and test
+      run: |
+        chmod +x ./gradlew
+        ./gradlew clean build
+
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: app-debug
+        path: app/build/outputs/apk/debug/*.apk
